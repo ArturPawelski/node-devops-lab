@@ -10,5 +10,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  api:
+    build: .
+    ports:
+      - "3002:3000"
+    environment:
+      DATABASE_URL: postgres://app:app@db:5432/orders
+    depends_on:
+      - db
+
 volumes:
   postgres_data:

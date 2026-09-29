@@ -1,5 +1,7 @@
-import { Controller, Get, OnModuleDestroy } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { Pool } from 'pg';
+import { DATABASE_POOL } from '../db/database.provider.js';
+
 
 type Order = {
   id: number;
@@ -8,11 +10,8 @@ type Order = {
 };
 
 @Controller('orders')
-export class OrdersController implements OnModuleDestroy {
-  private readonly pool = new Pool({
-    connectionString:
-      process.env.DATABASE_URL ?? 'postgres://app:app@localhost:5432/orders',
-  });
+export class OrdersController {
+  constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
   @Get()
   async getOrders(): Promise<Order[]> {
@@ -20,9 +19,5 @@ export class OrdersController implements OnModuleDestroy {
       'SELECT id, user_id, total_cents FROM orders ORDER BY id',
     );
     return result.rows;
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    await this.pool.end();
   }
 }
