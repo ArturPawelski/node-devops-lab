@@ -1,8 +1,10 @@
 name: CI
 
 on: [push, pull_request]
+
 permissions:
   contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,8 +25,21 @@ jobs:
       - name: Build Docker image
         run: docker build -t node-devops-lab:ci .
 
-      - name: Start API and database
-        run: docker compose -p orders-smoke up --build -d
+      - name: Start database
+        run: docker compose -p orders-smoke up -d --wait db
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgres://app:app@localhost:5432/orders
+        run: npm run migrate -- up
+
+      - name: Seed test database
+        run: |
+          docker compose -p orders-smoke exec -T db \
+            psql -v ON_ERROR_STOP=1 -U app -d orders < db/seed.sql
+
+      - name: Start API
+        run: docker compose -p orders-smoke up --build -d api
 
       - name: Check API readiness
         run: |
@@ -46,8 +61,8 @@ jobs:
       - name: Show container logs on failure
         if: failure()
         run: |
-          docker compose -p orders-smoke logs --no-color
           docker compose -p orders-smoke ps -a
+          docker compose -p orders-smoke logs --no-color
 
       - name: Clean up containers
         if: always()
