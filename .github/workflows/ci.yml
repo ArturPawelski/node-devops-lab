@@ -96,3 +96,7 @@ jobs:
         run: |
           docker build -t "$IMAGE:$TAG" .
           docker push "$IMAGE:$TAG"
+
+      - name: Log out of GHCR
+        if: always()
+        run: docker logout ghcr.io
