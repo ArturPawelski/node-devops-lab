@@ -17,6 +17,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Run lint
+        run: npm run lint
+
       - name: Run unit tests
         run: npm test
 
@@ -67,3 +70,29 @@ jobs:
       - name: Clean up containers
         if: always()
         run: docker compose -p orders-smoke down -v
+
+  publish:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io \
+            --username "${{ github.actor }}" \
+            --password-stdin
+
+      - name: Build and publish versioned image
+        env:
+          IMAGE: ghcr.io/arturpawelski/node-devops-lab
+          TAG: ${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE:$TAG" .
+          docker push "$IMAGE:$TAG"
