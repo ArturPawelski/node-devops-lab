@@ -1,0 +1,30 @@
+name: Check Azure access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Check access to VM
+        run: |
+          az vm show \
+            --resource-group rg-node-devops-lab \
+            --name vm-node-devops-lab \
+            --query '{name:name, provisioningState:provisioningState}' \
+            --output table
