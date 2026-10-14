@@ -31,7 +31,8 @@ docker compose -f compose.deploy.yaml pull api migrate
 docker compose -f compose.deploy.yaml up \
   -d --wait --wait-timeout 60 db
 
-docker compose -f compose.deploy.yaml run --rm migrate
+docker compose -f compose.deploy.yaml run \
+  --rm -T --interactive=false migrate
 
 docker compose -f compose.deploy.yaml up -d --no-deps api
 
