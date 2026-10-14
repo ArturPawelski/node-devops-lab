@@ -63,3 +63,4 @@ orders-response.json
 .env
 .env.*
 *.pem
+.ghcr-token
